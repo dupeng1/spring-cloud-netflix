@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Import;
  * @author Biju Kunjummen
  *
  */
-
+//开启EurekaServer，该注解用来激活EureakServerAutoConfiguration配置，通过@Import(EurekaServerMarkerConfiguration.class)来激活的
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

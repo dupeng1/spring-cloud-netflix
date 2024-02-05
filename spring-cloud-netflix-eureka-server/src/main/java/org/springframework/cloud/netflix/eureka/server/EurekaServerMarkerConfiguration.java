@@ -30,6 +30,7 @@ public class EurekaServerMarkerConfiguration {
 
 	@Bean
 	public Marker eurekaServerMarkerBean() {
+		//标记EurekaServer配置
 		return new Marker();
 	}
 

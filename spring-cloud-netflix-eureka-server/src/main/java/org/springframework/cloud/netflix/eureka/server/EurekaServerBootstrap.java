@@ -77,12 +77,14 @@ public class EurekaServerBootstrap {
 		this.registry = registry;
 		this.serverContext = serverContext;
 	}
-
+	//Eureka初始化
 	public void contextInitialized(ServletContext context) {
 		try {
+			//初始化环境
 			initEurekaEnvironment();
+			//初始化上下文
 			initEurekaServerContext();
-
+			//设置上下文属性
 			context.setAttribute(EurekaServerContext.class.getName(), this.serverContext);
 		}
 		catch (Throwable e) {
@@ -90,7 +92,7 @@ public class EurekaServerBootstrap {
 			throw new RuntimeException("Cannot bootstrap eureka server :", e);
 		}
 	}
-
+	//eureka上下文销毁
 	public void contextDestroyed(ServletContext context) {
 		try {
 			log.info("Shutting down Eureka Server..");
@@ -105,10 +107,10 @@ public class EurekaServerBootstrap {
 		}
 		log.info("Eureka Service is now shutdown...");
 	}
-
+	//初始化环境，设置一些环境参数
 	protected void initEurekaEnvironment() throws Exception {
 		log.info("Setting the eureka configuration..");
-
+		//设置数据中心
 		String dataCenter = ConfigurationManager.getConfigInstance()
 				.getString(EUREKA_DATACENTER);
 		if (dataCenter == null) {
@@ -121,6 +123,7 @@ public class EurekaServerBootstrap {
 			ConfigurationManager.getConfigInstance()
 					.setProperty(ARCHAIUS_DEPLOYMENT_DATACENTER, dataCenter);
 		}
+		//设置Eureka环境
 		String environment = ConfigurationManager.getConfigInstance()
 				.getString(EUREKA_ENVIRONMENT);
 		if (environment == null) {
@@ -134,7 +137,7 @@ public class EurekaServerBootstrap {
 					.setProperty(ARCHAIUS_DEPLOYMENT_ENVIRONMENT, environment);
 		}
 	}
-
+	//初始化eurekaServer上下文
 	protected void initEurekaServerContext() throws Exception {
 		// For backward compatibility
 		JsonXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(),
@@ -147,16 +150,18 @@ public class EurekaServerBootstrap {
 					this.eurekaClientConfig, this.registry, this.applicationInfoManager);
 			this.awsBinder.start();
 		}
-
+		//把EurekaServerContext设置到EurekaServerContextHolder中
 		EurekaServerContextHolder.initialize(this.serverContext);
 
 		log.info("Initialized server context");
 
 		// Copy registry from neighboring eureka node
+		//从相邻的eureka节点复制注册表，使用的是PeerAwareInstanceRegistryImpl的实现
 		int registryCount = this.registry.syncUp();
 		this.registry.openForTraffic(this.applicationInfoManager, registryCount);
 
 		// Register all monitoring statistics.
+		//注册所有监视统计信息。
 		EurekaMonitors.registerAllStats();
 	}
 

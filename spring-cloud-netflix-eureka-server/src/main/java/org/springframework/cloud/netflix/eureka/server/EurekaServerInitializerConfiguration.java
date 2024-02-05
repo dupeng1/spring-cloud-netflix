@@ -33,6 +33,8 @@ import org.springframework.core.Ordered;
 import org.springframework.web.context.ServletContextAware;
 
 /**
+ * 通过starter初始化和启动eureka,并抛出两个事件：EurekaRegistryAvailableEvent服务注册事件，EurekaServerStartedEvent服务启动事件，
+ * EurekaServer初始化核心的代码在eurekaServerBootstrap.contextInitialized中
  * @author Dave Syer
  */
 @Configuration(proxyBeanMethods = false)
@@ -41,38 +43,41 @@ public class EurekaServerInitializerConfiguration
 
 	private static final Log log = LogFactory
 			.getLog(EurekaServerInitializerConfiguration.class);
-
+	//EurekaServer 配置
 	@Autowired
 	private EurekaServerConfig eurekaServerConfig;
-
+	//Servlet上下文
 	private ServletContext servletContext;
-
+	//应用上下文对象
 	@Autowired
 	private ApplicationContext applicationContext;
-
+	//启动引导
 	@Autowired
 	private EurekaServerBootstrap eurekaServerBootstrap;
 
 	private boolean running;
 
 	private int order = 1;
-
+	//初始化Servlet上下文
 	@Override
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
 	}
-
+	//开始方法，复写于 SmartLifecycle 在Spring启动的时候，该方法会被地调用，
 	@Override
 	public void start() {
 		new Thread(() -> {
 			try {
 				// TODO: is this class even needed now?
+				//初始化EurekaServer上下文，启动EurekaServer
 				eurekaServerBootstrap.contextInitialized(
 						EurekaServerInitializerConfiguration.this.servletContext);
 				log.info("Started Eureka Server");
-
+				//发布一个EurekaRegistryAvailableEvent注册事件
 				publish(new EurekaRegistryAvailableEvent(getEurekaServerConfig()));
+				//改变running状态true
 				EurekaServerInitializerConfiguration.this.running = true;
+				//发布EurekaServer启动事件EurekaServerStartedEvent
 				publish(new EurekaServerStartedEvent(getEurekaServerConfig()));
 			}
 			catch (Exception ex) {
@@ -89,7 +94,7 @@ public class EurekaServerInitializerConfiguration
 	private void publish(ApplicationEvent event) {
 		this.applicationContext.publishEvent(event);
 	}
-
+	//生命周期，停止，销毁eurekaServer
 	@Override
 	public void stop() {
 		this.running = false;
